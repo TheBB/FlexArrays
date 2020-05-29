@@ -284,6 +284,12 @@ class FlexArray(BlockDict):
                     retval.add(newindex, contract(value, mx, contract_axis))
         return retval
 
+    def __neg__(self):
+        retval = FlexArray(ndim=self.ndim)
+        for index, value in self.items():
+            retval.add(index, -value)
+        return retval
+
     def __iadd__(self, other):
         if np.isscalar(other):
             for index in self:
@@ -301,6 +307,9 @@ class FlexArray(BlockDict):
         retval += other
         return retval
 
+    def __radd__(self, other):
+        return self.__add__(other)
+
     def __isub__(self, other):
         if np.isscalar(other):
             for index in self:
@@ -317,6 +326,9 @@ class FlexArray(BlockDict):
         retval = self.copy()
         retval -= other
         return retval
+
+    def __rsub__(self, other):
+        return -self + other
 
     def __imul__(self, other):
         if np.isscalar(other):
@@ -339,6 +351,9 @@ class FlexArray(BlockDict):
         retval = self.copy()
         retval *= other
         return retval
+
+    def __rmul__(self, other):
+        return self * other
 
 
 class Realizer:

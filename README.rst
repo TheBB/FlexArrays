@@ -131,8 +131,10 @@ Arithmetic and other array operations
 
 FlexArrays support:
 
-- addition, subtraction and multiplication involving FlexArrays and
-  scalars, without broadcasting (number of dimensions must match)
+- negation
+- addition, subtraction and multiplication (but not yet division)
+  involving FlexArrays and scalars, without broadcasting (number of
+  dimensions must match)
 - transposition using the ``.transpose()`` method and and ``.T``
   attribute
 - rudimentary contraction, using ``array.contract(other, axis)`` to
