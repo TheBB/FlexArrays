@@ -165,30 +165,24 @@ class BlockDict(dict):
 
 class FlexArray(BlockDict):
 
-    def __init__(self, components=(), ndim=None):
+    def __init__(self, ndim=None):
         super().__init__()
-
-        # If any components are given, determine number of dimensions
-        if components and ndim is None:
-            ndim = len(components[0][0])
-
-        # Initialize data structures
         self.sizes = dict()
         self.ndim = ndim
-
-        # Iteratively add-in each component
-        for index, value in components:
-            self._add_component(index, value)
 
     @classmethod
     def vector(cls, index, value):
         """Simplified constructor for a single-block vector."""
-        return cls(((index,), value))
+        retval = cls(ndim=1)
+        retval[(index,)] = value
+        return retval
 
     @classmethod
     def single(cls, index, value):
         """Simplified constructor for a single-block array."""
-        return cls((index, value))
+        retval = cls(ndim=value.ndim)
+        retval[index] = value
+        return retval
 
     @property
     def realize(self):
@@ -196,7 +190,6 @@ class FlexArray(BlockDict):
 
     @normalize_index('index')
     def _add_component(self, index, value):
-        print(index, value)
         self[index] = self.get(index, zero_sentinel) + value
 
     @normalize_index('index')
@@ -269,7 +262,6 @@ class FlexArray(BlockDict):
             elif other.ndim == 2:
                 for newaxis, mx in slc.items():
                     newindex = (*index[:posaxis], *newaxis, *index[posaxis+1:])
-                    print('>>>', index, newaxis, newindex, contract_axis)
                     retval._add_component(newindex, contract(value, mx, contract_axis))
         return retval
 
