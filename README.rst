@@ -37,7 +37,8 @@ construction is the number of dimensions.
    array = FlexArray(ndim=2)
 
 
-Then insert the blocks you need.
+Then insert the blocks you need.  FlexArrays are instances of ordinary
+Python dictionaries.
 
 .. code-block:: python
 
@@ -141,7 +142,7 @@ FlexArrays support:
   contract a given axis of ``array`` with the *first* axis of
   ``other``, which must be one- or two-dimensional
 
-Other operations will be added when, and as required.
+Other operations will be added when and as required.
 
 
 Block format
