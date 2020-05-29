@@ -140,3 +140,19 @@ FlexArrays support:
   ``other``, which must be one- or two-dimensional
 
 Other operations will be added when, and as required.
+
+
+Block format
+------------
+
+Blocks may be Numpy arrays or Scipy sparse matrices.  At the time of
+writing, other types may also be used, so long as they support the
+conventional interfaces, of which the following is a potentionally
+non-exhaustive list:
+
+- the ``.shape`` and ``.ndim`` attributes
+- behaviour as expected under all arithmetic operations
+- the Numpy transposition methods
+
+Contraction and realization will currently *not* work with unsupported
+types.
