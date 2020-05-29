@@ -78,14 +78,33 @@ def normalize_multiindex(*argnames):
 
 contract = Dispatcher('contract')
 
-
 @contract.register(np.ndarray, np.ndarray, int)
-def contract(a, b, axis):
+def _(a, b, axis):
     if b.ndim == 1:
         return np.einsum(a, list(range(a.ndim)), b, [axis])
     out_order = list(range(a.ndim))
     out_order[axis] = a.ndim
     return np.einsum(a, list(range(a.ndim)), b, [axis, a.ndim], out_order)
+
+@contract.register(sparselib.spmatrix, sparselib.spmatrix, int)
+def _(a, b, axis):
+    if axis == 1:
+        return a.dot(b)
+    return a.T.dot(b).T
+
+@contract.register(sparselib.spmatrix, np.ndarray, int)
+def _(a, b, axis):
+    if axis == 1:
+        return a.dot(b)
+    return a.T.dot(b).T
+
+@contract.register(np.ndarray, sparselib.spmatrix, int)
+def _(a, b, axis):
+    # Temporarily swap axes so that the target axis is in front
+    a = np.swapaxes(a, 0, axis)
+    retval = b.T.dot(a)
+    retval = np.swapaxes(retval, 0, axis)
+    return retval
 
 
 class Range:
