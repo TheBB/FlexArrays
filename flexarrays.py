@@ -208,7 +208,7 @@ class FlexArray(BlockDict):
         return Realizer(self)
 
     @normalize_index('index')
-    def _add_component(self, index, value):
+    def add(self, index, value):
         self[index] = self.get(index, zero_sentinel) + value
 
     @normalize_index('index')
@@ -227,7 +227,7 @@ class FlexArray(BlockDict):
         new_ndim = sum(1 for blockname in index if not isinstance(blockname, str))
         retval = FlexArray(ndim=new_ndim)
         for newindex, value in compatible_indexes(self, index):
-            retval._add_component(newindex, value)
+            retval.add(newindex, value)
         return retval
 
     @normalize_index('index')
@@ -241,7 +241,7 @@ class FlexArray(BlockDict):
         for index, value in self.items():
             if deep:
                 value = value.copy()
-            retval._add_component(index, value)
+            retval.add(index, value)
         return retval
 
     def transpose(self, perm):
@@ -249,7 +249,7 @@ class FlexArray(BlockDict):
         for index, value in self.items():
             newindex = tuple(index[k] for k in perm)
             value = value.transpose(perm)
-            retval._add_component(index, value)
+            retval.add(index, value)
         return retval
 
     @property
@@ -277,11 +277,11 @@ class FlexArray(BlockDict):
             contract_axis = value.ndim + negaxis
             if other.ndim == 1:
                 newindex = (*index[:posaxis], *index[posaxis+1:])
-                retval._add_component(newindex, contract(value, slc, contract_axis))
+                retval.add(newindex, contract(value, slc, contract_axis))
             elif other.ndim == 2:
                 for newaxis, mx in slc.items():
                     newindex = (*index[:posaxis], *newaxis, *index[posaxis+1:])
-                    retval._add_component(newindex, contract(value, mx, contract_axis))
+                    retval.add(newindex, contract(value, mx, contract_axis))
         return retval
 
     def __iadd__(self, other):
@@ -293,7 +293,7 @@ class FlexArray(BlockDict):
             return NotImplemented
         assert self.ndim == other.ndim
         for index, value in other.items():
-            self._add_component(index, value)
+            self.add(index, value)
         return self
 
     def __add__(self, other):
@@ -310,7 +310,7 @@ class FlexArray(BlockDict):
             return NotImplemented
         assert self.ndim == other.ndim
         for index, value in other.items():
-            self._add_component(index, -value)
+            self.add(index, -value)
         return self
 
     def __sub__(self, other):

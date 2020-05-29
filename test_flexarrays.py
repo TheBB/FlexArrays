@@ -12,7 +12,7 @@ def one(*shape):
 
 def test_simple_vector():
     a = FlexArray(ndim=1)
-    a._add_component('aa', zero(2))
+    a.add('aa', zero(2))
     assert set(a) == {('aa',)}
     assert a.sizes == {'aa': 2}
     assert isinstance(a['aa'], np.ndarray)
@@ -23,7 +23,7 @@ def test_simple_vector():
 
 def test_simple_matrix():
     a = FlexArray(ndim=2)
-    a._add_component(('aa','aa'), zero(2,2))
+    a.add(('aa','aa'), zero(2,2))
     assert set(a) == {('aa','aa')}
     assert a.sizes == {'aa': 2}
     np.testing.assert_array_equal(a.realize[R['aa'], R['aa']], zero(2,2))
@@ -34,8 +34,8 @@ def test_simple_matrix():
 
 def test_multi_vector():
     a = FlexArray(ndim=1)
-    a._add_component('aa', zero(2))
-    a._add_component('bb', one(3))
+    a.add('aa', zero(2))
+    a.add('bb', one(3))
     assert set(a) == {('aa',), ('bb',)}
     assert a.sizes == {'aa': 2, 'bb': 3}
     np.testing.assert_array_equal(a.realize[R['aa','bb']], [*zero(2), *one(3)])
@@ -46,10 +46,10 @@ def test_multi_vector():
 
 def test_multi_matrix():
     a = FlexArray(ndim=2)
-    a._add_component(('aa', 'aa'), zero(2,2))
-    a._add_component(('aa', 'bb'), one(2,3))
-    a._add_component(('bb', 'aa'), 2 * one(3,2))
-    a._add_component(('bb', 'bb'), 3 * one(3,3))
+    a.add(('aa', 'aa'), zero(2,2))
+    a.add(('aa', 'bb'), one(2,3))
+    a.add(('bb', 'aa'), 2 * one(3,2))
+    a.add(('bb', 'bb'), 3 * one(3,3))
     assert set(a) == {('aa','aa'), ('aa','bb'), ('bb','aa'), ('bb','bb')}
     assert a.sizes == {'aa': 2, 'bb': 3}
     np.testing.assert_array_equal(a.realize['aa','aa'], zero(2,2))
@@ -67,9 +67,9 @@ def test_multi_matrix():
 def test_slices():
     z = zero(1,1,1)
     a = FlexArray(ndim=3)
-    a._add_component(('aa', 'zz', 'cc'), zero(1, 6, 3))
-    a._add_component(('aa', 'bb', 'cc'), zero(1, 2, 3))
-    a._add_component(('aa', 'dd', 'ee'), zero(1, 4, 5))
+    a.add(('aa', 'zz', 'cc'), zero(1, 6, 3))
+    a.add(('aa', 'bb', 'cc'), zero(1, 2, 3))
+    a.add(('aa', 'dd', 'ee'), zero(1, 4, 5))
     assert a.sizes == {'aa': 1, 'bb': 2, 'cc': 3, 'dd': 4, 'ee': 5, 'zz': 6}
 
     b = a['aa', ...]
