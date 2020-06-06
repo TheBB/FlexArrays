@@ -317,6 +317,16 @@ class FlexArray(BlockDict):
                     retval.add(newindex, contract(value, mx, contract_axis))
         return retval
 
+    def contract_many(self, contract):
+        assert len(contract) == self.ndim
+        retval = self.copy()
+        for i, c in enumerate(reversed(contract)):
+            if c is None:
+                continue
+            axis = self.ndim - i - 1
+            retval = retval.contract(c, axis)
+        return retval
+
     def __neg__(self):
         retval = FlexArray(ndim=self.ndim)
         for index, value in self.items():
