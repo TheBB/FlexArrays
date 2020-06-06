@@ -1,5 +1,5 @@
 from collections import namedtuple
-from functools import partial, wraps
+from functools import partial, wraps, singledispatch
 import inspect
 from itertools import product
 from multipledispatch import Dispatcher
@@ -106,6 +106,34 @@ def _(a, b, axis):
     retval = b.T.dot(a)
     retval = np.swapaxes(retval, 0, axis)
     return retval
+
+
+@singledispatch
+def copy(obj):
+    raise NotImplementedError(type(obj))
+
+@copy.register(np.ndarray)
+def _(obj):
+    return obj.copy()
+
+@copy.register(sparselib.spmatrix)
+def _(obj):
+    return obj.copy()
+
+
+@singledispatch
+def transpose(obj, perm):
+    raise NotImplementedError(type(obj))
+
+@transpose.register(np.ndarray)
+def _(obj, perm):
+    return obj.transpose(perm)
+
+@transpose.register(sparselib.spmatrix)
+def _(obj, perm):
+    if perm == (0, 1):
+        return obj
+    return obj.T
 
 
 class Range:
@@ -241,7 +269,7 @@ class FlexArray(BlockDict):
         retval = FlexArray(ndim=self.ndim)
         for index, value in self.items():
             if deep:
-                value = value.copy()
+                value = copy(value)
             retval.add(index, value)
         return retval
 
@@ -249,8 +277,8 @@ class FlexArray(BlockDict):
         retval = FlexArray(ndim=self.ndim)
         for index, value in self.items():
             newindex = tuple(index[k] for k in perm)
-            value = value.transpose(perm)
-            retval.add(index, value)
+            value = transpose(value, perm)
+            retval.add(newindex, value)
         return retval
 
     @property
