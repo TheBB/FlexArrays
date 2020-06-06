@@ -35,7 +35,7 @@ def expand_index(index, ndim):
     return (*before, *(slice(None) for _ in range(nslices)), *after)
 
 
-def normalize_index(*argnames):
+def normalize_index(*argnames, expand=True):
     def decorator(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -46,7 +46,7 @@ def normalize_index(*argnames):
                 value = binding.arguments[argname]
                 if isinstance(value, str):
                     value = (value,)
-                if hasattr(binding.arguments['self'], 'ndim'):
+                if expand and hasattr(binding.arguments['self'], 'ndim'):
                     value = expand_index(value, binding.arguments['self'].ndim)
                 binding.arguments[argname] = value
             return func(*binding.args, **binding.kwargs)
@@ -54,7 +54,7 @@ def normalize_index(*argnames):
     return decorator
 
 
-def normalize_multiindex(*argnames):
+def normalize_multiindex(*argnames, expand=True):
     def decorator(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -69,7 +69,8 @@ def normalize_multiindex(*argnames):
                     value = (value,)
                 elif isinstance(value, tuple):
                     value = tuple(v if isinstance(v, Range) else R[v] for v in value)
-                value = expand_index(value, binding.arguments['self'].ndim)
+                if expand and hasattr(binding.arguments['self'], 'ndim'):
+                    value = expand_index(value, binding.arguments['self'].ndim)
                 binding.arguments[argname] = value
             return func(*binding.args, **binding.kwargs)
         return inner
