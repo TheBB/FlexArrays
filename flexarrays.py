@@ -423,7 +423,7 @@ class Realizer:
         assert len(indices) == array.ndim
 
         blockshape = tuple(len(blocknames) for blocknames in indices)
-        zerofunc = scipy.sparse.coo_matrix if self.sparse else partial(np.full, fill_value=0.0)
+        zerofunc = sparselib.coo_matrix if self.sparse else partial(np.full, fill_value=0.0)
         ordered_blocks = np.zeros(blockshape, dtype=object)
         for i, index in enumerate(product(*indices)):
             ordered_blocks.flat[i] = self.array.get(index, zero=zerofunc)
