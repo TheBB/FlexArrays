@@ -240,6 +240,22 @@ class FlexArray(BlockDict):
     def realize(self):
         return Realizer(self)
 
+    def ranges(self, blocks):
+        previous, ranges = 0, []
+        for block in blocks:
+            ranges.append(np.arange(previous, previous + self.sizes[block]))
+            previous += self.sizes[block]
+        return ranges
+
+    @normalize_multiindex('indices', expand=False)
+    def compatible(self, indices, array):
+        ranges = [self.ranges(index) for index in indices]
+        retval = FlexArray(ndim=array.ndim)
+        retval.sizes.update(self.sizes)
+        for index, blockranges in zip(product(*indices), product(*ranges)):
+            retval[index] = array[np.ix_(*blockranges)]
+        return retval
+
     @normalize_index('index')
     def add(self, index, value):
         self[index] = self.get(index, zero_sentinel) + value
