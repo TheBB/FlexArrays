@@ -210,6 +210,10 @@ class BlockDict(dict):
     def __contains__(self, index):
         return super().__contains__(index)
 
+    def only(self):
+        assert len(self) == 1
+        return next(iter(self.items()))
+
 
 class FlexArray(BlockDict):
 
