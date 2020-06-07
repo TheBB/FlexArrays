@@ -369,6 +369,8 @@ class FlexArray(BlockDict):
         return self
 
     def __add__(self, other):
+        if not np.isscalar(other) and not isinstance(other, FlexArray):
+            return NotImplemented
         retval = self.copy()
         retval += other
         return retval
@@ -392,11 +394,15 @@ class FlexArray(BlockDict):
         return self
 
     def __sub__(self, other):
+        if not np.isscalar(other) and not isinstance(other, FlexArray):
+            return NotImplemented
         retval = self.copy()
         retval -= other
         return retval
 
     def __rsub__(self, other):
+        if not np.isscalar(other) and not isinstance(other, FlexArray):
+            return NotImplemented
         return -self + other
 
     def __imul__(self, other):
@@ -420,6 +426,8 @@ class FlexArray(BlockDict):
         return self
 
     def __mul__(self, other):
+        if not np.isscalar(other) and not isinstance(other, FlexArray):
+            return NotImplemented
         retval = self.copy()
         retval *= other
         return retval
