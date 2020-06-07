@@ -44,7 +44,7 @@ def normalize_index(*argnames, expand=True):
             binding.apply_defaults()
             for argname in argnames:
                 value = binding.arguments[argname]
-                if isinstance(value, str):
+                if isinstance(value, (str, Range)):
                     value = (value,)
                 if expand and hasattr(binding.arguments['self'], 'ndim'):
                     value = expand_index(value, binding.arguments['self'].ndim)
