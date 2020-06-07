@@ -23,7 +23,23 @@ def compatible_indexes(blocks, slicer):
             yield index, value
 
 
-def expand_index(index, ndim):
+def normalize_single(_, value):
+    if isinstance(value, (str, Range)):
+        value = (value,)
+    return value
+
+
+def normalize_multiple(_, value):
+    if isinstance(value, str):
+        value = (R[value],)
+    elif isinstance(value, Range):
+        value = (value,)
+    elif isinstance(value, tuple):
+        value = tuple(v if isinstance(v, Range) else R[v] for v in value)
+    return value
+
+
+def _expand_ndims(index, ndim):
     try:
         ellipsis_index = next(i for i, v in enumerate(index) if v == Ellipsis)
         before, after = index[:ellipsis_index], index[ellipsis_index+1:]
@@ -33,46 +49,33 @@ def expand_index(index, ndim):
     return (*before, *(slice(None) for _ in range(nslices)), *after)
 
 
-def normalize_index(*argnames, expand=True):
-    def decorator(func):
-        @wraps(func)
-        def inner(*args, **kwargs):
-            signature = inspect.signature(func)
-            binding = signature.bind(*args, **kwargs)
-            binding.apply_defaults()
-            for argname in argnames:
-                value = binding.arguments[argname]
-                if isinstance(value, (str, Range)):
-                    value = (value,)
-                self = binding.arguments['self']
-                if expand and hasattr(self, 'ndim') and self.ndim is not None:
-                    value = expand_index(value, binding.arguments['self'].ndim)
-                binding.arguments[argname] = value
-            return func(*binding.args, **binding.kwargs)
-        return inner
-    return decorator
+def expand_ndims(args, value):
+    if not 'self' in args:
+        return value
+    array = args['self']
+    if not hasattr(array, 'ndim'):
+        return value
+    if array.ndim is None:
+        return value
+    return _expand_ndims(value, array.ndim)
 
 
-def normalize_multiindex(*argnames, expand=True):
-    def decorator(func):
-        @wraps(func)
+def apply(argname, *funcs):
+    def decorator(wrapfunc):
+        @wraps(wrapfunc)
         def inner(*args, **kwargs):
-            signature = inspect.signature(func)
+            signature = inspect.signature(wrapfunc)
             binding = signature.bind(*args, **kwargs)
             binding.apply_defaults()
-            for argname in argnames:
+            try:
                 value = binding.arguments[argname]
-                if isinstance(value, str):
-                    value = (R[value],)
-                elif isinstance(value, Range):
-                    value = (value,)
-                elif isinstance(value, tuple):
-                    value = tuple(v if isinstance(v, Range) else R[v] for v in value)
-                self = binding.arguments['self']
-                if expand and hasattr(self, 'ndim') and self.ndim is not None:
-                    value = expand_index(value, binding.arguments['self'].ndim)
-                binding.arguments[argname] = value
-            return func(*binding.args, **binding.kwargs)
+            except KeyError:
+                print(binding.arguments)
+                raise
+            for func in funcs:
+                value = func(binding.arguments, value)
+            binding.arguments[argname] = value
+            return wrapfunc(*binding.args, **binding.kwargs)
         return inner
     return decorator
 
@@ -152,7 +155,7 @@ class Range:
 
 class RangeBuilder:
 
-    @normalize_index('blocknames')
+    @apply('blocknames', normalize_single)
     def __getitem__(self, blocknames):
         return Range(blocknames)
 
@@ -194,19 +197,19 @@ zero_sentinel = ZeroSentinel()
 
 class BlockDict(dict):
 
-    @normalize_index('index')
+    @apply('index', normalize_single, expand_ndims)
     def __getitem__(self, index):
         return super().__getitem__(index)
 
-    @normalize_index('index')
+    @apply('index', normalize_single, expand_ndims)
     def __setitem__(self, index, value):
         super().__setitem__(index, value)
 
-    @normalize_index('index')
+    @apply('index', normalize_single, expand_ndims)
     def __delitem__(self, index):
         super().__delitem__(index)
 
-    @normalize_index('index')
+    @apply('index', normalize_single, expand_ndims)
     def __contains__(self, index):
         return super().__contains__(index)
 
@@ -261,7 +264,7 @@ class FlexArray(BlockDict):
                 retval.add(index, value)
         return retval
 
-    @normalize_multiindex('indices', expand=False)
+    @apply('indices', normalize_multiple)
     def compatible(self, indices, array):
         ranges = [self.ranges(index) for index in indices]
         retval = FlexArray(ndim=array.ndim)
@@ -270,11 +273,11 @@ class FlexArray(BlockDict):
             retval[index] = array[np.ix_(*blockranges)]
         return retval
 
-    @normalize_index('index')
+    @apply('index', normalize_single, expand_ndims)
     def add(self, index, value):
         self[index] = self.get(index, zero_sentinel) + value
 
-    @normalize_index('index')
+    @apply('index', normalize_single, expand_ndims)
     def get(self, index, default=None, zero=None):
         if index in self:
             return super().__getitem__(index)
@@ -283,7 +286,7 @@ class FlexArray(BlockDict):
             return zero(shape)
         return default
 
-    @normalize_index('index')
+    @apply('index', normalize_single, expand_ndims)
     def __getitem__(self, index):
         if all(isinstance(blockname, str) for blockname in index):
             return super().__getitem__(index)
@@ -293,7 +296,7 @@ class FlexArray(BlockDict):
             retval.add(newindex, value)
         return retval
 
-    @normalize_index('index')
+    @apply('index', normalize_single, expand_ndims)
     def __setitem__(self, index, value):
         if self.ndim is None:
             self.ndim = value.ndim
@@ -476,7 +479,7 @@ class Realizer:
     def __call__(self, sparse=None):
         return Realizer(self.array, sparse)
 
-    @normalize_multiindex('indices')
+    @apply('indices', normalize_multiple, expand_ndims)
     def __getitem__(self, indices):
         array = self.array
         assert len(indices) == array.ndim
