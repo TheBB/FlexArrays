@@ -73,19 +73,19 @@ def test_slices():
     assert a.sizes == {'aa': 1, 'bb': 2, 'cc': 3, 'dd': 4, 'ee': 5, 'zz': 6}
 
     b = a['aa', ...]
-    assert b.ndim == 2
-    assert set(b) == {('zz','cc'), ('bb','cc'), ('dd','ee')}
-    assert b.sizes == {'bb': 2, 'cc': 3, 'dd': 4, 'ee': 5, 'zz': 6}
+    assert b.ndim == 3
+    assert set(b) == {('aa','zz','cc'), ('aa','bb','cc'), ('aa','dd','ee')}
+    assert b.sizes == {'aa': 1, 'bb': 2, 'cc': 3, 'dd': 4, 'ee': 5, 'zz': 6}
 
     b = a['aa']
-    assert b.ndim == 2
-    assert set(b) == {('zz','cc'), ('bb','cc'), ('dd','ee')}
-    assert b.sizes == {'bb': 2, 'cc': 3, 'dd': 4, 'ee': 5, 'zz': 6}
+    assert b.ndim == 3
+    assert set(b) == {('aa','zz','cc'), ('aa','bb','cc'), ('aa','dd','ee')}
+    assert b.sizes == {'aa': 1, 'bb': 2, 'cc': 3, 'dd': 4, 'ee': 5, 'zz': 6}
 
     b = a['aa', 'zz', ...]
-    assert b.ndim == 1
-    assert set(b) == {('cc',)}
-    assert b.sizes == {'cc': 3}
+    assert b.ndim == 3
+    assert set(b) == {('aa','zz','cc')}
+    assert b.sizes == {'aa': 1, 'cc': 3, 'zz': 6}
 
 
 def test_numpy_contract():

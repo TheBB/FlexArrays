@@ -20,8 +20,7 @@ def is_compatible(index, slicer):
 def compatible_indexes(blocks, slicer):
     for index, value in blocks.items():
         if is_compatible(index, slicer):
-            newindex = tuple(i for i, s in zip(index, slicer) if not isinstance(s, str))
-            yield newindex, value
+            yield index, value
 
 
 def expand_index(index, ndim):
@@ -290,7 +289,7 @@ class FlexArray(BlockDict):
         if all(isinstance(blockname, str) for blockname in index):
             return super().__getitem__(index)
         new_ndim = sum(1 for blockname in index if not isinstance(blockname, str))
-        retval = FlexArray(ndim=new_ndim)
+        retval = FlexArray(ndim=self.ndim)
         for newindex, value in compatible_indexes(self, index):
             retval.add(newindex, value)
         return retval
@@ -338,7 +337,7 @@ class FlexArray(BlockDict):
 
         for index, value in self.items():
             try:
-                slc = other[index[axis]]
+                slc = other[index[axis], ...]
             except KeyError:
                 continue
             contract_axis = value.ndim + negaxis
@@ -346,8 +345,8 @@ class FlexArray(BlockDict):
                 newindex = (*index[:posaxis], *index[posaxis+1:])
                 retval.add(newindex, contract(value, slc, contract_axis))
             elif other.ndim == 2:
-                for newaxis, mx in slc.items():
-                    newindex = (*index[:posaxis], *newaxis, *index[posaxis+1:])
+                for (_, newaxis), mx in slc.items():
+                    newindex = (*index[:posaxis], newaxis, *index[posaxis+1:])
                     retval.add(newindex, contract(value, mx, contract_axis))
         return retval
 
