@@ -87,6 +87,16 @@ def test_slices():
     assert set(b) == {('aa','zz','cc')}
     assert b.sizes == {'aa': 1, 'cc': 3, 'zz': 6}
 
+    b = a[..., 'cc']
+    assert b.ndim == 3
+    assert set(b) == {('aa','zz','cc'), ('aa','bb','cc')}
+    assert b.sizes == {'aa': 1, 'bb': 2, 'cc': 3, 'zz': 6}
+
+    b = a['aa', ..., 'cc']
+    assert b.ndim == 3
+    assert set(b) == {('aa','zz','cc'), ('aa','bb','cc')}
+    assert b.sizes == {'aa': 1, 'bb': 2, 'cc': 3, 'zz': 6}
+
 
 def test_numpy_contract():
     z = FlexArray(ndim=2)

@@ -26,7 +26,6 @@ def compatible_indexes(blocks, slicer):
 def expand_index(index, ndim):
     try:
         ellipsis_index = next(i for i, v in enumerate(index) if v == Ellipsis)
-        assert ellipsis_index == len(index) - 1
         before, after = index[:ellipsis_index], index[ellipsis_index+1:]
     except StopIteration:
         before, after = index, ()
@@ -46,7 +45,7 @@ def normalize_index(*argnames, expand=True):
                 if isinstance(value, (str, Range)):
                     value = (value,)
                 self = binding.arguments['self']
-                if expand and hasattr(binding.arguments['self'], 'ndim') and self.ndim is not None:
+                if expand and hasattr(self, 'ndim') and self.ndim is not None:
                     value = expand_index(value, binding.arguments['self'].ndim)
                 binding.arguments[argname] = value
             return func(*binding.args, **binding.kwargs)
