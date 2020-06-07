@@ -249,6 +249,20 @@ class FlexArray(BlockDict):
             previous += self.sizes[block]
         return ranges
 
+    def keep(self, *blocks):
+        retval = FlexArray(ndim=self.ndim)
+        for index, value in self.items():
+            if all(block in blocks for block in index):
+                retval.add(index, value)
+        return retval
+
+    def discard(self, *blocks):
+        retval = FlexArray(ndim=self.ndim)
+        for index, value in self.items():
+            if all(block not in blocks for block in index):
+                retval.add(index, value)
+        return retval
+
     @normalize_multiindex('indices', expand=False)
     def compatible(self, indices, array):
         ranges = [self.ranges(index) for index in indices]
