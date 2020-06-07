@@ -46,7 +46,8 @@ def normalize_index(*argnames, expand=True):
                 value = binding.arguments[argname]
                 if isinstance(value, (str, Range)):
                     value = (value,)
-                if expand and hasattr(binding.arguments['self'], 'ndim'):
+                self = binding.arguments['self']
+                if expand and hasattr(binding.arguments['self'], 'ndim') and self.ndim is not None:
                     value = expand_index(value, binding.arguments['self'].ndim)
                 binding.arguments[argname] = value
             return func(*binding.args, **binding.kwargs)
@@ -69,7 +70,8 @@ def normalize_multiindex(*argnames, expand=True):
                     value = (value,)
                 elif isinstance(value, tuple):
                     value = tuple(v if isinstance(v, Range) else R[v] for v in value)
-                if expand and hasattr(binding.arguments['self'], 'ndim'):
+                self = binding.arguments['self']
+                if expand and hasattr(self, 'ndim') and self.ndim is not None:
                     value = expand_index(value, binding.arguments['self'].ndim)
                 binding.arguments[argname] = value
             return func(*binding.args, **binding.kwargs)
@@ -281,6 +283,8 @@ class FlexArray(BlockDict):
 
     @normalize_index('index')
     def __setitem__(self, index, value):
+        if self.ndim is None:
+            self.ndim = value.ndim
         for blockname, size in zip(index, value.shape[-self.ndim:]):
             assert size == self.sizes.setdefault(blockname, size)
         super().__setitem__(index, value)
@@ -356,7 +360,10 @@ class FlexArray(BlockDict):
             return self
         if not isinstance(other, FlexArray):
             return NotImplemented
-        assert self.ndim == other.ndim
+        if self.ndim is not None:
+            assert self.ndim == other.ndim
+        else:
+            self.ndim = other.ndim
         for index, value in other.items():
             self.add(index, value)
         return self
@@ -376,7 +383,10 @@ class FlexArray(BlockDict):
             return self
         if not isinstance(other, FlexArray):
             return NotImplemented
-        assert self.ndim == other.ndim
+        if self.ndim is not None:
+            assert self.ndim == other.ndim
+        else:
+            self.ndim = other.ndim
         for index, value in other.items():
             self.add(index, -value)
         return self
@@ -396,7 +406,10 @@ class FlexArray(BlockDict):
             return self
         if not isinstance(other, FlexArray):
             return NotImplemented
-        assert self.ndim == other.ndim
+        if self.ndim is not None:
+            assert self.ndim == other.ndim
+        else:
+            self.ndim = other.ndim
         mine = set(self.keys())
         theirs = set(other.keys())
         for index in mine - theirs:
