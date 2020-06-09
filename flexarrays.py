@@ -144,20 +144,36 @@ class Range:
     def __init__(self, blocknames):
         self.blocknames = blocknames
 
+
+class PositiveRange(Range):
+
     def __iter__(self):
         yield from self.blocknames
 
     def __len__(self):
         return len(self.blocknames)
 
+    def __invert__(self):
+        return NegativeRange(self.blocknames)
+
     def __contains__(self, blockname):
         return blockname in self.blocknames
+
+
+class NegativeRange(Range):
+
+    def __invert__(self):
+        return PositiveRange(self.blocknames)
+
+    def __contains__(self, blockname):
+        return blockname not in self.blocknames
+
 
 class RangeBuilder:
 
     @apply('blocknames', normalize_single)
     def __getitem__(self, blocknames):
-        return Range(blocknames)
+        return PositiveRange(blocknames)
 
 R = RangeBuilder()
 
